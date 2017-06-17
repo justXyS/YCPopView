@@ -43,7 +43,7 @@ protocol PopCreator {
 }
 
 /// Abstract class
-public class BasicPopViewCreator: PopCreator {
+open class BasicPopViewCreator: PopCreator {
     
     public var touchBackDismiss = true
     
@@ -68,15 +68,15 @@ public class BasicPopViewCreator: PopCreator {
     
     public init() { }
     
-    public func show(style: PopPosition) {
+    open func show(style: PopPosition) {
         assertionFailure("implement by subclass")
     }
     
-    public func dismiss() {
+    open func dismiss() {
         assertionFailure("implement by subclass")
     }
     
-    @objc public func clickBack() {
+    @objc open func clickBack() {
         if touchBackDismiss {
             dismiss()
         }
