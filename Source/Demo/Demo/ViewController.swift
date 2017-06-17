@@ -24,8 +24,7 @@ class ViewController: UIViewController {
     @IBAction func click() {
         var alertView = AlertView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
         alertView.backgroundColor = UIColor.red
-        
-        alertView.show(in: view, posistion: .center(style: .pop))
+        alertView.show(in: view)
     }
 }
 

@@ -66,6 +66,8 @@ public class BasicPopViewCreator: PopCreator {
         return view
     }()
     
+    public init() { }
+    
     public func show(style: PopPosition) {
         assertionFailure("implement by subclass")
     }
@@ -375,13 +377,19 @@ var popCreatorKey = ""
 
 extension PopAble where Self: UIView {
     
-    var popCreator: BasicPopViewCreator! {
+    /// 创建popview的创建器,默认为YCPopViewCreator
+    public var popCreator: BasicPopViewCreator! {
         set {
             objc_setAssociatedObject(self, &popCreatorKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
         
         get {
-            return objc_getAssociatedObject(self, &popCreatorKey) as? BasicPopViewCreator
+            var pop = objc_getAssociatedObject(self, &popCreatorKey) as? BasicPopViewCreator
+            if pop == nil {
+                pop = YCPopViewCreator()
+                objc_setAssociatedObject(self, &popCreatorKey, pop, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+            return pop
         }
     }
     
@@ -389,9 +397,7 @@ extension PopAble where Self: UIView {
     /// - Parameters:
     ///     - view: 父容器
     ///     - posistion: 位置
-    ///     - popCreator: 创建popview的创建器
-    public mutating func show(`in` view: UIView, posistion: PopPosition, popCreator: BasicPopViewCreator = YCPopViewCreator())  {
-        self.popCreator = popCreator
+    public func show(`in` view: UIView, posistion: PopPosition = .center(style: .pop))  {
         popCreator.showInView = view
         popCreator.targetView = self
         popCreator.show(style: posistion)
