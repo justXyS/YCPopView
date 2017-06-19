@@ -37,7 +37,7 @@ public enum ViewAlignment {
     case right
 }
 
-protocol PopCreator {
+public protocol PopCreator {
     func show(style: PopPosition)
     func dismiss()
 }
@@ -48,12 +48,13 @@ open class BasicPopViewCreator: PopCreator {
     public var touchBackDismiss = true
     
     public var animationDuration: TimeInterval = 0.4
-    public var initialSpringVelocity: CGFloat = 8
-    public var dampingRatio: CGFloat = 0.5
+    public var initialSpringVelocity: CGFloat = 6
+    public var dampingRatio: CGFloat = 0.7
     
     public weak var targetView: UIView?
     public weak var showInView: UIView?
     
+    ///可通过设置其背景色来修改整体背景，默认是无色
     public lazy var backView: UIButton = {
         let btn = UIButton(type: .custom)
         btn.addTarget(self, action: #selector(clickBack), for: .touchUpInside)
@@ -86,6 +87,21 @@ open class BasicPopViewCreator: PopCreator {
 public final class YCPopViewCreator: BasicPopViewCreator {
     
     fileprivate var style: PopPosition?
+    
+    public override weak var targetView: UIView? {
+        didSet {
+            extensionView.backgroundColor = targetView?.backgroundColor
+            targetView?.addSubview(extensionView)
+        }
+    }
+    
+    ///添加额外的拓展区域的，避免弹性动画时断层
+    fileprivate var extensionWidth: CGFloat = 40.0
+    
+    fileprivate lazy var extensionView: UIView = {
+        let view = UIView()
+        return view
+    }()
     
     public override func show(style: PopPosition) {
         
@@ -143,6 +159,7 @@ public final class YCPopViewCreator: BasicPopViewCreator {
                     }, completion: nil)
             }
         case .bottom(let st):
+            extensionView.frame = CGRect(x: 0, y: 0, width: targetView.bounds.width, height: targetView.bounds.height + extensionWidth)
             switch st {
             case .fade(let alignment):
                 switch alignment {
@@ -175,6 +192,7 @@ public final class YCPopViewCreator: BasicPopViewCreator {
                 }, completion: nil)
             }
         case .left(let st):
+            extensionView.frame = CGRect(x: -extensionWidth, y: 0, width: targetView.bounds.width + extensionWidth, height: targetView.bounds.height)
             switch st {
             case .fade(let alignment):
                 switch alignment {
@@ -208,6 +226,7 @@ public final class YCPopViewCreator: BasicPopViewCreator {
                 }, completion: nil)
             }
         case .top(let st):
+            extensionView.frame = CGRect(x: 0, y: -extensionWidth, width: targetView.bounds.width, height: targetView.bounds.height + extensionWidth)
             switch st {
             case .fade(let alignment):
                 switch alignment {
@@ -239,6 +258,7 @@ public final class YCPopViewCreator: BasicPopViewCreator {
                 }, completion: nil)
             }
         case .right(let st):
+            extensionView.frame = CGRect(x: 0, y: 0, width: targetView.bounds.width + extensionWidth, height: targetView.bounds.height)
             switch st {
             case .fade(let alignment):
                 switch alignment {
