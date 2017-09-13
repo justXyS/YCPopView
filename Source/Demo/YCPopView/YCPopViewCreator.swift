@@ -54,6 +54,8 @@ open class BasicPopViewCreator: PopCreator {
     public weak var targetView: UIView?
     public weak var showInView: UIView?
     
+    public var complement: (()->())?
+    
     ///可通过设置其背景色来修改整体背景，默认是无色
     public lazy var backView: UIButton = {
         let btn = UIButton(type: .custom)
@@ -91,12 +93,20 @@ public final class YCPopViewCreator: BasicPopViewCreator {
     public override weak var targetView: UIView? {
         didSet {
             extensionView.backgroundColor = targetView?.backgroundColor
-            targetView?.addSubview(extensionView)
+            containerView.addSubview(extensionView)
         }
     }
     
     ///添加额外的拓展区域的，避免弹性动画时断层
-    fileprivate var extensionWidth: CGFloat = 40.0
+    fileprivate var extensionWidth: CGFloat = 40.0 {
+        didSet {
+            if extensionWidth == 0 {
+                extensionView.isHidden = true
+            } else {
+                extensionView.isHidden = false
+            }
+        }
+    }
     
     fileprivate lazy var extensionView: UIView = {
         let view = UIView()
@@ -117,49 +127,49 @@ public final class YCPopViewCreator: BasicPopViewCreator {
         
         switch style {
         case .center(let st):
+            extensionView.frame = CGRect.zero
             switch st {
-                case .fade:
+            case .fade:
+                targetView.center = CGPoint(x: showInView.bounds.midX, y: showInView.bounds.midY)
+                fadeShow()
+            case .pop:
+                targetView.center = CGPoint(x: showInView.bounds.midX, y: showInView.bounds.midY)
+                containerView.alpha = 0
+                targetView.transform = CGAffineTransform(scaleX: 0.2, y: 0.2)
+                
+                fadeShow(block: {
+                    targetView.transform = .identity
+                })
+            case .fromTop:
+                backView.alpha = 0
+                targetView.center = CGPoint(x: showInView.bounds.midX, y: -targetView.bounds.height / 2)
+                UIView.animate(withDuration: animationDuration, delay: 0, usingSpringWithDamping: dampingRatio, initialSpringVelocity: initialSpringVelocity, options: [], animations: {
                     targetView.center = CGPoint(x: showInView.bounds.midX, y: showInView.bounds.midY)
-                    fadeShow()
-                case .pop:
+                    self.backView.alpha = 1
+                }, completion: nil)
+            case .fromLeft:
+                backView.alpha = 0
+                targetView.center = CGPoint(x: -targetView.bounds.maxX / 2, y: showInView.bounds.midY)
+                UIView.animate(withDuration: animationDuration, delay: 0, usingSpringWithDamping: dampingRatio, initialSpringVelocity: initialSpringVelocity, options: [], animations: {
                     targetView.center = CGPoint(x: showInView.bounds.midX, y: showInView.bounds.midY)
-                    containerView.alpha = 0
-                    targetView.transform = CGAffineTransform(scaleX: 0.2, y: 0.2)
-                    
-                    fadeShow(block: { 
-                        targetView.transform = .identity
-                    })
-                case .fromTop:
-                    backView.alpha = 0
-                    targetView.center = CGPoint(x: showInView.bounds.midX, y: -targetView.bounds.height / 2)
-                    UIView.animate(withDuration: animationDuration, delay: 0, usingSpringWithDamping: dampingRatio, initialSpringVelocity: initialSpringVelocity, options: [], animations: {
-                        targetView.center = CGPoint(x: showInView.bounds.midX, y: showInView.bounds.midY)
-                        self.backView.alpha = 1
-                    }, completion: nil)
-                case .fromLeft:
-                    backView.alpha = 0
-                    targetView.center = CGPoint(x: -targetView.bounds.maxX / 2, y: showInView.bounds.midY)
-                    UIView.animate(withDuration: animationDuration, delay: 0, usingSpringWithDamping: dampingRatio, initialSpringVelocity: initialSpringVelocity, options: [], animations: {
-                        targetView.center = CGPoint(x: showInView.bounds.midX, y: showInView.bounds.midY)
-                        self.backView.alpha = 1
-                    }, completion: nil)
-                case .fromRight:
-                    backView.alpha = 0
-                    targetView.center = CGPoint(x: showInView.bounds.maxX+targetView.bounds.maxX/2, y: showInView.bounds.midY)
-                    UIView.animate(withDuration: animationDuration, delay: 0, usingSpringWithDamping: dampingRatio, initialSpringVelocity: initialSpringVelocity, options: [], animations: {
-                        targetView.center = CGPoint(x: showInView.bounds.midX, y: showInView.bounds.midY)
-                        self.backView.alpha = 1
-                    }, completion: nil)
-                case .fromBottom:
-                    backView.alpha = 0
-                    targetView.center = CGPoint(x: showInView.bounds.midX, y: showInView.bounds.maxY+targetView.bounds.height/2)
-                    UIView.animate(withDuration: animationDuration, delay: 0, usingSpringWithDamping: dampingRatio, initialSpringVelocity: initialSpringVelocity, options: [], animations: {
-                        targetView.center = CGPoint(x: showInView.bounds.midX, y: showInView.bounds.midY)
-                        self.backView.alpha = 1
-                    }, completion: nil)
+                    self.backView.alpha = 1
+                }, completion: nil)
+            case .fromRight:
+                backView.alpha = 0
+                targetView.center = CGPoint(x: showInView.bounds.maxX+targetView.bounds.maxX/2, y: showInView.bounds.midY)
+                UIView.animate(withDuration: animationDuration, delay: 0, usingSpringWithDamping: dampingRatio, initialSpringVelocity: initialSpringVelocity, options: [], animations: {
+                    targetView.center = CGPoint(x: showInView.bounds.midX, y: showInView.bounds.midY)
+                    self.backView.alpha = 1
+                }, completion: nil)
+            case .fromBottom:
+                backView.alpha = 0
+                targetView.center = CGPoint(x: showInView.bounds.midX, y: showInView.bounds.maxY+targetView.bounds.height/2)
+                UIView.animate(withDuration: animationDuration, delay: 0, usingSpringWithDamping: dampingRatio, initialSpringVelocity: initialSpringVelocity, options: [], animations: {
+                    targetView.center = CGPoint(x: showInView.bounds.midX, y: showInView.bounds.midY)
+                    self.backView.alpha = 1
+                }, completion: nil)
             }
         case .bottom(let st):
-            extensionView.frame = CGRect(x: 0, y: 0, width: targetView.bounds.width, height: targetView.bounds.height + extensionWidth)
             switch st {
             case .fade(let alignment):
                 switch alignment {
@@ -172,22 +182,27 @@ public final class YCPopViewCreator: BasicPopViewCreator {
                 default: break
                 }
                 targetView.frame.origin.y = showInView.bounds.height - targetView.frame.height
+                extensionView.frame = CGRect(x: targetView.frame.origin.x, y: targetView.frame.origin.y, width: targetView.bounds.width, height: targetView.bounds.height + extensionWidth)
                 fadeShow()
             case .moveIn(let bounce,let alignment):
                 backView.alpha = 0
                 
                 switch alignment {
-                    case .left:
-                        targetView.frame.origin.x = 0
-                    case .center:
-                        targetView.frame.origin.x = showInView.bounds.midX - targetView.frame.width/2
-                    case .right:
-                        targetView.frame.origin.x = showInView.bounds.maxX - targetView.frame.width
-                    default: break
+                case .left:
+                    targetView.frame.origin.x = 0
+                case .center:
+                    targetView.frame.origin.x = showInView.bounds.midX - targetView.frame.width/2
+                case .right:
+                    targetView.frame.origin.x = showInView.bounds.maxX - targetView.frame.width
+                default: break
                 }
                 targetView.frame.origin.y = showInView.bounds.height
+                var targetRect = targetView.frame
+                targetRect.origin.y = showInView.bounds.height - targetView.frame.height
+                extensionView.frame = CGRect(x: targetView.frame.origin.x, y: targetView.frame.origin.y, width: targetRect.width, height: targetRect.height + extensionWidth)
+                
                 UIView.animate(withDuration: animationDuration, delay: 0, usingSpringWithDamping: bounce ?dampingRatio : 1, initialSpringVelocity: initialSpringVelocity, options: [], animations: {
-                    targetView.frame.origin.y = showInView.bounds.height - targetView.frame.height
+                    targetView.frame = targetRect
                     self.backView.alpha = 1
                 }, completion: nil)
             }
@@ -205,6 +220,7 @@ public final class YCPopViewCreator: BasicPopViewCreator {
                 default: break
                 }
                 targetView.frame.origin.x = 0
+                extensionView.frame = CGRect(x: targetView.frame.origin.x, y: targetView.frame.origin.y, width: targetView.bounds.width, height: targetView.bounds.height + extensionWidth)
                 fadeShow()
             case .moveIn(let bounce,let alignment):
                 backView.alpha = 0
@@ -219,9 +235,12 @@ public final class YCPopViewCreator: BasicPopViewCreator {
                 default: break
                 }
                 targetView.frame.origin.x = -targetView.bounds.width
+                var targetRect = targetView.frame
+                targetRect.origin.x = 0
+                extensionView.frame = CGRect(x: targetView.frame.origin.x, y: targetView.frame.origin.y, width: targetRect.width, height: targetRect.height + extensionWidth)
                 
                 UIView.animate(withDuration: animationDuration, delay: 0, usingSpringWithDamping: bounce ?dampingRatio : 1, initialSpringVelocity: initialSpringVelocity, options: [], animations: {
-                    targetView.frame.origin.x = 0
+                    targetView.frame = targetRect
                     self.backView.alpha = 1
                 }, completion: nil)
             }
@@ -239,6 +258,7 @@ public final class YCPopViewCreator: BasicPopViewCreator {
                 default: break
                 }
                 targetView.frame.origin.y = 0
+                extensionView.frame = CGRect(x: targetView.frame.origin.x, y: targetView.frame.origin.y, width: targetView.bounds.width, height: targetView.bounds.height + extensionWidth)
                 fadeShow()
             case .moveIn(let bounce,let alignment):
                 backView.alpha = 0
@@ -252,8 +272,11 @@ public final class YCPopViewCreator: BasicPopViewCreator {
                 default: break
                 }
                 targetView.frame.origin.y = -showInView.bounds.height
+                var targetRect = targetView.frame
+                targetRect.origin.y = 0
+                extensionView.frame = CGRect(x: targetView.frame.origin.x, y: targetView.frame.origin.y, width: targetRect.width, height: targetRect.height + extensionWidth)
                 UIView.animate(withDuration: animationDuration, delay: 0, usingSpringWithDamping: bounce ?dampingRatio : 1, initialSpringVelocity: initialSpringVelocity, options: [], animations: {
-                    targetView.frame.origin.y = 0
+                    targetView.frame = targetRect
                     self.backView.alpha = 1
                 }, completion: nil)
             }
@@ -271,6 +294,7 @@ public final class YCPopViewCreator: BasicPopViewCreator {
                 default: break
                 }
                 targetView.frame.origin.x = showInView.bounds.width - targetView.frame.width
+                extensionView.frame = CGRect(x: targetView.frame.origin.x, y: targetView.frame.origin.y, width: targetView.bounds.width, height: targetView.bounds.height + extensionWidth)
                 fadeShow()
             case .moveIn(let bounce,let alignment):
                 backView.alpha = 0
@@ -285,8 +309,11 @@ public final class YCPopViewCreator: BasicPopViewCreator {
                 default: break
                 }
                 targetView.frame.origin.x = showInView.bounds.width
+                var targetRect = targetView.frame
+                targetRect.origin.x = showInView.bounds.width - targetView.frame.width
+                extensionView.frame = CGRect(x: targetView.frame.origin.x, y: targetView.frame.origin.y, width: targetRect.width, height: targetRect.height + extensionWidth)
                 UIView.animate(withDuration: animationDuration, delay: 0, usingSpringWithDamping: bounce ?dampingRatio : 1, initialSpringVelocity: initialSpringVelocity, options: [], animations: {
-                    targetView.frame.origin.x = showInView.bounds.width - targetView.frame.width
+                    targetView.frame = targetRect
                     self.backView.alpha = 1
                 }, completion: nil)
             }
@@ -302,7 +329,7 @@ public final class YCPopViewCreator: BasicPopViewCreator {
             case .fade:
                 fadeDismiss()
             case .pop:
-                fadeDismiss(block: { 
+                fadeDismiss(block: {
                     targetView.transform = CGAffineTransform(scaleX: 0.2, y: 0.2)
                 })
             case .fromTop:
@@ -355,7 +382,7 @@ public final class YCPopViewCreator: BasicPopViewCreator {
             case .fade:
                 fadeDismiss()
             case .moveIn(let bounce, _):
-                moveInDismiss(bounce: bounce, block: { 
+                moveInDismiss(bounce: bounce, block: {
                     targetView.frame.origin.x = -targetView.frame.width
                 })
             }
@@ -378,6 +405,7 @@ public final class YCPopViewCreator: BasicPopViewCreator {
             self.containerView.alpha = 1
             self.containerView.removeFromSuperview()
             self.targetView?.removeFromSuperview()
+            self.complement?()
         })
     }
     
@@ -389,6 +417,7 @@ public final class YCPopViewCreator: BasicPopViewCreator {
             self.backView.alpha = 1
             self.targetView?.removeFromSuperview()
             self.containerView.removeFromSuperview()
+            self.complement?()
         })
     }
     
@@ -423,9 +452,10 @@ extension PopAble where Self: UIView {
     /// - Parameters:
     ///     - view: 父容器
     ///     - posistion: 位置
-    public func show(`in` view: UIView, posistion: PopPosition = .center(style: .pop))  {
+    public func show(`in` view: UIView, posistion: PopPosition = .center(style: .pop), complement:(()->())? = nil)  {
         popCreator.showInView = view
         popCreator.targetView = self
+        popCreator.complement = complement
         popCreator.show(style: posistion)
     }
     
